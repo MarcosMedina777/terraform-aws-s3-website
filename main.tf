@@ -12,19 +12,12 @@ provider "aws" {
 }
 
 variable "mein_name" {
-  default = "nitro"   # ← Hier kannst du später deinen Namen ändern
+  default = "nitro"
 }
 
 resource "aws_s3_bucket" "website" {
-  bucket = "terraform-website-${var.mein_name}-${formatdate("YYYYMMDD", timestamp())}"
-}
-
-resource "aws_s3_bucket_website_configuration" "website" {
-  bucket = aws_s3_bucket.website.id
-
-  index_document {
-    suffix = "index.html"
-  }
+  bucket        = "terraform-website-${var.mein_name}-${formatdate("YYYYMMDD", timestamp())}"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_public_access_block" "website" {
@@ -34,6 +27,14 @@ resource "aws_s3_bucket_public_access_block" "website" {
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_website_configuration" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  index_document {
+    suffix = "index.html"
+  }
 }
 
 resource "aws_s3_bucket_policy" "website" {
@@ -51,4 +52,6 @@ resource "aws_s3_bucket_policy" "website" {
       }
     ]
   })
+
+  depends_on = [aws_s3_bucket_public_access_block.website]
 }
